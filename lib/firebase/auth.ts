@@ -4,15 +4,20 @@ import {
   EmailAuthProvider,
   GoogleAuthProvider,
   linkWithCredential,
+  signInWithCredential,
   signInWithEmailAndPassword,
-  signInWithPopup,
   signOut,
   updateProfile,
   type User,
 } from "firebase/auth";
 import { getFirebaseAuth } from "./client";
 
-const googleProvider = new GoogleAuthProvider();
+export async function signInWithGoogleIdToken(idToken: string): Promise<User> {
+  const auth = getFirebaseAuth();
+  const credential = GoogleAuthProvider.credential(idToken);
+  const result = await signInWithCredential(auth, credential);
+  return result.user;
+}
 
 export async function signUpWithEmail(
   email: string,
@@ -36,12 +41,6 @@ export async function signInWithEmail(
   const auth = getFirebaseAuth();
   const credential = await signInWithEmailAndPassword(auth, email, password);
   return credential.user;
-}
-
-export async function signInWithGoogle(): Promise<User> {
-  const auth = getFirebaseAuth();
-  const result = await signInWithPopup(auth, googleProvider);
-  return result.user;
 }
 
 export function hasPasswordLogin(user: User): boolean {

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
+import { getGoogleClientId, loadGoogleGsi } from "@/lib/google/gsi";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -46,34 +47,93 @@ export function GoogleSignInButton({
 }: GoogleSignInButtonProps) {
   const { signInGoogle } = useAuth();
   const router = useRouter();
+  const overlayRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
+  const [ready, setReady] = useState(false);
 
-  async function handleGoogleSignIn() {
-    setLoading(true);
-    try {
-      await signInGoogle();
-      toast.success("Đăng nhập thành công");
-      router.push("/dashboard");
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Không thể đăng nhập Google"
-      );
-    } finally {
-      setLoading(false);
-    }
+  useEffect(() => {
+    const overlay = overlayRef.current;
+    const clientId = getGoogleClientId();
+    if (!overlay || !clientId) return;
+
+    let cancelled = false;
+
+    void loadGoogleGsi()
+      .then(() => {
+        if (cancelled || !window.google?.accounts?.id) return;
+
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: (response) => {
+            setLoading(true);
+            void signInGoogle(response.credential)
+              .then(() => {
+                toast.success("Đăng nhập thành công");
+                router.push("/dashboard");
+              })
+              .catch((error) => {
+                toast.error(
+                  error instanceof Error
+                    ? error.message
+                    : "Không thể đăng nhập Google"
+                );
+              })
+              .finally(() => setLoading(false));
+          },
+        });
+
+        const width = overlay.parentElement?.clientWidth ?? 280;
+        window.google.accounts.id.renderButton(overlay, {
+          type: "standard",
+          theme: "outline",
+          size: "large",
+          text: "continue_with",
+          width: Math.max(width, 280),
+        });
+
+        setReady(true);
+      })
+      .catch((error) => {
+        toast.error(
+          error instanceof Error ? error.message : "Không tải được Google Sign-In"
+        );
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [router, signInGoogle]);
+
+  if (!getGoogleClientId()) {
+    return (
+      <p className="text-center text-sm text-muted-foreground">
+        Thiếu NEXT_PUBLIC_GOOGLE_CLIENT_ID
+      </p>
+    );
   }
 
   return (
-    <Button
-      type="button"
-      variant={variant}
-      size={size}
-      className={cn("w-full gap-3", className)}
-      onClick={handleGoogleSignIn}
-      disabled={loading}
-    >
-      {loading ? <Loader2 className="animate-spin" /> : <GoogleIcon />}
-      <span>{label}</span>
-    </Button>
+    <div className={cn("relative w-full", className)}>
+      <Button
+        type="button"
+        variant={variant}
+        size={size}
+        className="pointer-events-none w-full gap-3"
+        disabled={loading || !ready}
+        tabIndex={-1}
+        aria-hidden
+      >
+        {loading ? <Loader2 className="animate-spin" /> : <GoogleIcon />}
+        <span>{label}</span>
+      </Button>
+      <div
+        ref={overlayRef}
+        className={cn(
+          "absolute inset-0 z-10 overflow-hidden opacity-[0.01]",
+          (!ready || loading) && "pointer-events-none"
+        )}
+        aria-label={label}
+      />
+    </div>
   );
 }

@@ -15,7 +15,7 @@ import { isFirebaseConfigured } from "@/lib/firebase/config";
 import {
   logOut,
   signInWithEmail,
-  signInWithGoogle,
+  signInWithGoogleIdToken,
   signUpWithEmail,
 } from "@/lib/firebase/auth";
 import { getAuthErrorMessage } from "@/lib/firebase/errors";
@@ -29,7 +29,7 @@ type AuthContextValue = {
     password: string,
     displayName?: string
   ) => Promise<void>;
-  signInGoogle: () => Promise<void>;
+  signInGoogle: (idToken: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -75,9 +75,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     []
   );
 
-  const signInGoogle = useCallback(async () => {
+  const signInGoogle = useCallback(async (idToken: string) => {
     try {
-      await signInWithGoogle();
+      await signInWithGoogleIdToken(idToken);
     } catch (error) {
       throw new Error(getAuthErrorMessage(error));
     }
