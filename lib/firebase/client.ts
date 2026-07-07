@@ -1,12 +1,5 @@
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
-import {
-  browserLocalPersistence,
-  browserPopupRedirectResolver,
-  getAuth,
-  indexedDBLocalPersistence,
-  initializeAuth,
-  type Auth,
-} from "firebase/auth";
+import { getAuth, type Auth } from "firebase/auth";
 import { getAnalytics, isSupported, type Analytics } from "firebase/analytics";
 import { assertFirebaseConfig, buildFirebaseConfig } from "./config";
 
@@ -31,15 +24,7 @@ export function getFirebaseApp(): FirebaseApp {
 
 export function getFirebaseAuth(): Auth {
   if (!auth) {
-    const firebaseApp = getFirebaseApp();
-    try {
-      auth = initializeAuth(firebaseApp, {
-        persistence: [indexedDBLocalPersistence, browserLocalPersistence],
-        popupRedirectResolver: browserPopupRedirectResolver,
-      });
-    } catch {
-      auth = getAuth(firebaseApp);
-    }
+    auth = getAuth(getFirebaseApp());
   }
   return auth;
 }

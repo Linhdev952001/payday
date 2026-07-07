@@ -13,7 +13,6 @@ import { onAuthStateChanged, type User } from "firebase/auth";
 import { getFirebaseAuth, getFirebaseAnalytics } from "@/lib/firebase/client";
 import { isFirebaseConfigured } from "@/lib/firebase/config";
 import {
-  GOOGLE_AUTH_ENABLED,
   logOut,
   signInWithEmail,
   signInWithGoogle,
@@ -42,13 +41,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!isFirebaseConfigured()) {
-      console.error("[auth] Firebase env vars missing at build time");
       setLoading(false);
       return;
     }
-
-    // ponytail: clear stale flag from old redirect flow
-    sessionStorage.removeItem("payday-google-redirect");
 
     const auth = getFirebaseAuth();
     const unsubscribe = onAuthStateChanged(auth, setUser);
@@ -62,11 +57,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
-    if (!isFirebaseConfigured()) {
-      throw new Error(
-        "Firebase chưa cấu hình trên server. Thêm NEXT_PUBLIC_FIREBASE_* trên Vercel và redeploy."
-      );
-    }
     try {
       await signInWithEmail(email, password);
     } catch (error) {
@@ -76,11 +66,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = useCallback(
     async (email: string, password: string, displayName?: string) => {
-      if (!isFirebaseConfigured()) {
-        throw new Error(
-          "Firebase chưa cấu hình trên server. Thêm NEXT_PUBLIC_FIREBASE_* trên Vercel và redeploy."
-        );
-      }
       try {
         await signUpWithEmail(email, password, displayName);
       } catch (error) {
@@ -91,14 +76,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const signInGoogle = useCallback(async () => {
-    if (!GOOGLE_AUTH_ENABLED) {
-      throw new Error("Đăng nhập Google tạm thời không khả dụng.");
-    }
-    if (!isFirebaseConfigured()) {
-      throw new Error(
-        "Firebase chưa cấu hình trên server. Thêm NEXT_PUBLIC_FIREBASE_* trên Vercel và redeploy."
-      );
-    }
     try {
       await signInWithGoogle();
     } catch (error) {

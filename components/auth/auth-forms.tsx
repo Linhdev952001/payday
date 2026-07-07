@@ -4,11 +4,10 @@ import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ChevronDown, Loader2, Mail } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useT } from "@/contexts/i18n-context";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
-import { GOOGLE_AUTH_ENABLED } from "@/lib/firebase/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -94,74 +93,10 @@ function AuthFooterLink({
   );
 }
 
-function LoginEmailForm({
-  email,
-  password,
-  loading,
-  onEmailChange,
-  onPasswordChange,
-  onSubmit,
-}: {
-  email: string;
-  password: string;
-  loading: boolean;
-  onEmailChange: (value: string) => void;
-  onPasswordChange: (value: string) => void;
-  onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
-}) {
-  const t = useT();
-
-  return (
-    <form onSubmit={onSubmit} className="space-y-4 pt-1">
-      <div className="space-y-1.5">
-        <label
-          htmlFor="email"
-          className="px-1 text-[13px] font-medium text-muted-foreground"
-        >
-          {t("auth.email")}
-        </label>
-        <Input
-          id="email"
-          type="email"
-          autoComplete="email"
-          inputMode="email"
-          placeholder="ban@email.com"
-          value={email}
-          onChange={(e) => onEmailChange(e.target.value)}
-          required
-        />
-      </div>
-      <div className="space-y-1.5">
-        <label
-          htmlFor="password"
-          className="px-1 text-[13px] font-medium text-muted-foreground"
-        >
-          {t("auth.password")}
-        </label>
-        <Input
-          id="password"
-          type="password"
-          autoComplete="current-password"
-          placeholder="••••••••"
-          value={password}
-          onChange={(e) => onPasswordChange(e.target.value)}
-          required
-          minLength={6}
-        />
-      </div>
-      <Button type="submit" className="w-full" size="lg" disabled={loading}>
-        {loading && <Loader2 className="animate-spin" />}
-        {t("auth.login")}
-      </Button>
-    </form>
-  );
-}
-
 export function LoginForm() {
   const { signIn } = useAuth();
   const t = useT();
   const router = useRouter();
-  const [showEmailForm, setShowEmailForm] = useState(!GOOGLE_AUTH_ENABLED);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -196,70 +131,54 @@ export function LoginForm() {
       }
     >
       <div className="space-y-4">
-        {GOOGLE_AUTH_ENABLED && (
-          <>
-            <GoogleSignInButton
-              variant="default"
-              size="lg"
-              label={t("auth.loginWithGoogle")}
-              className="shadow-[0_4px_20px_-4px_color-mix(in_srgb,var(--primary)_55%,transparent)]"
+        <GoogleSignInButton
+          variant="default"
+          size="lg"
+          label={t("auth.loginWithGoogle")}
+        />
+        <AuthDivider />
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1.5">
+            <label
+              htmlFor="email"
+              className="px-1 text-[13px] font-medium text-muted-foreground"
+            >
+              {t("auth.email")}
+            </label>
+            <Input
+              id="email"
+              type="email"
+              autoComplete="email"
+              inputMode="email"
+              placeholder="ban@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
             />
-            <AuthDivider />
-            <button
-              type="button"
-              onClick={() => setShowEmailForm((open) => !open)}
-              className={cn(
-                "flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-left transition-colors active:scale-[0.99]",
-                showEmailForm
-                  ? "bg-primary/10 text-foreground"
-                  : "bg-secondary text-muted-foreground active:bg-secondary/80"
-              )}
+          </div>
+          <div className="space-y-1.5">
+            <label
+              htmlFor="password"
+              className="px-1 text-[13px] font-medium text-muted-foreground"
             >
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-background/60">
-                <Mail className="size-4" strokeWidth={2} />
-              </span>
-              <span className="min-w-0 flex-1 text-[15px] font-semibold">
-                {t("auth.loginWithEmail")}
-              </span>
-              <ChevronDown
-                className={cn(
-                  "size-4 shrink-0 transition-transform duration-200",
-                  showEmailForm && "rotate-180"
-                )}
-              />
-            </button>
-            <div
-              className={cn(
-                "grid transition-[grid-template-rows,opacity] duration-300 ease-out",
-                showEmailForm
-                  ? "grid-rows-[1fr] opacity-100"
-                  : "grid-rows-[0fr] opacity-0"
-              )}
-            >
-              <div className="overflow-hidden">
-                <LoginEmailForm
-                  email={email}
-                  password={password}
-                  loading={loading}
-                  onEmailChange={setEmail}
-                  onPasswordChange={setPassword}
-                  onSubmit={handleSubmit}
-                />
-              </div>
-            </div>
-          </>
-        )}
-
-        {!GOOGLE_AUTH_ENABLED && (
-          <LoginEmailForm
-            email={email}
-            password={password}
-            loading={loading}
-            onEmailChange={setEmail}
-            onPasswordChange={setPassword}
-            onSubmit={handleSubmit}
-          />
-        )}
+              {t("auth.password")}
+            </label>
+            <Input
+              id="password"
+              type="password"
+              autoComplete="current-password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+            />
+          </div>
+          <Button type="submit" className="w-full" size="lg" disabled={loading}>
+            {loading && <Loader2 className="animate-spin" />}
+            {t("auth.login")}
+          </Button>
+        </form>
       </div>
     </AuthScreen>
   );
@@ -305,18 +224,12 @@ export function RegisterForm() {
       }
     >
       <div className="space-y-4">
-        {GOOGLE_AUTH_ENABLED && (
-          <>
-            <GoogleSignInButton
-              variant="default"
-              size="lg"
-              label={t("auth.registerWithGoogle")}
-              className="shadow-[0_4px_20px_-4px_color-mix(in_srgb,var(--primary)_55%,transparent)]"
-            />
-            <AuthDivider />
-          </>
-        )}
-
+        <GoogleSignInButton
+          variant="default"
+          size="lg"
+          label={t("auth.registerWithGoogle")}
+        />
+        <AuthDivider />
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
             <label
