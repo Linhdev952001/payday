@@ -103,6 +103,21 @@ export function combineDateAndTime(date: string, time: string): string {
   return new Date(`${date}T${time}:00`).toISOString();
 }
 
+/** End on next day when end time is at or before start (e.g. 13:00 → 00:00). */
+export function combineShiftTimes(
+  date: string,
+  startTime: string,
+  endTime: string
+): { startIso: string; endIso: string } {
+  const startIso = combineDateAndTime(date, startTime);
+  const endDate =
+    endTime <= startTime
+      ? format(addDays(parseISO(`${date}T12:00:00`), 1), "yyyy-MM-dd")
+      : date;
+  const endIso = combineDateAndTime(endDate, endTime);
+  return { startIso, endIso };
+}
+
 export function isoToTimeInput(iso: string): string {
   return format(parseISO(iso), "HH:mm");
 }

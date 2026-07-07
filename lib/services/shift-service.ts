@@ -19,7 +19,7 @@ import {
   calculateWorkedMinutesFromEvents,
   calculateWorkedMinutesFromManual,
 } from "@/lib/time/calculate";
-import { combineDateAndTime } from "@/lib/time/format";
+import { combineDateAndTime, combineShiftTimes } from "@/lib/time/format";
 import { syncUserData } from "@/lib/firebase/sync";
 import {
   createId,
@@ -288,8 +288,11 @@ export async function createManualShift(
     throw new Error("Nhập giờ bắt đầu và kết thúc.");
   }
 
-  const startIso = combineDateAndTime(data.date, data.startTime);
-  const endIso = combineDateAndTime(data.date, data.endTime);
+  const { startIso, endIso } = combineShiftTimes(
+    data.date,
+    data.startTime,
+    data.endTime
+  );
 
   if (startIso >= endIso) {
     throw new Error("Giờ kết thúc phải sau giờ bắt đầu.");

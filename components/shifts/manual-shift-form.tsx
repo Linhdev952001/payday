@@ -17,7 +17,7 @@ import { createManualShift, updateShift } from "@/lib/services/shift-service";
 import { calculatePay, formatCurrency } from "@/lib/pay/calculate";
 import { formatAmountInput, parseAmountInput } from "@/lib/pay/amount-input";
 import { calculateWorkedMinutesFromManual } from "@/lib/time/calculate";
-import { combineDateAndTime, formatDuration, isoToTimeInput } from "@/lib/time/format";
+import { combineShiftTimes, formatDuration, isoToTimeInput } from "@/lib/time/format";
 import { useAppStore } from "@/stores/app-store";
 import type { Shift } from "@/types";
 import { cn } from "@/lib/utils";
@@ -145,8 +145,7 @@ export function ManualShiftForm({
 
     if (!startTime || !endTime) return null;
     try {
-      const startIso = combineDateAndTime(date, startTime);
-      const endIso = combineDateAndTime(date, endTime);
+      const { startIso, endIso } = combineShiftTimes(date, startTime, endTime);
       if (startIso >= endIso) return null;
       const minutes = calculateWorkedMinutesFromManual(startIso, endIso, 0);
       const earned = calculatePay(minutes, job.payConfig, date);
@@ -236,8 +235,7 @@ export function ManualShiftForm({
           toast.success(t("shift.closedMonth"));
         }
       } else {
-        const startIso = combineDateAndTime(date, startTime);
-        const endIso = combineDateAndTime(date, endTime);
+        const { startIso, endIso } = combineShiftTimes(date, startTime, endTime);
 
         if (shift) {
           await updateShift(shift, job, {
