@@ -1,17 +1,28 @@
 import type { FirebaseOptions } from "firebase/app";
 
-const REQUIRED_ENV_KEYS = [
-  "NEXT_PUBLIC_FIREBASE_API_KEY",
-  "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN",
-  "NEXT_PUBLIC_FIREBASE_PROJECT_ID",
-  "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET",
-  "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID",
-  "NEXT_PUBLIC_FIREBASE_APP_ID",
+/** Static access so Next.js inlines NEXT_PUBLIC_* at build time. */
+const ENV = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
+} as const;
+
+export const REQUIRED_FIREBASE_ENV = [
+  ["NEXT_PUBLIC_FIREBASE_API_KEY", ENV.apiKey],
+  ["NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN", ENV.authDomain],
+  ["NEXT_PUBLIC_FIREBASE_PROJECT_ID", ENV.projectId],
+  ["NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET", ENV.storageBucket],
+  ["NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID", ENV.messagingSenderId],
+  ["NEXT_PUBLIC_FIREBASE_APP_ID", ENV.appId],
 ] as const;
 
-function readEnv(key: string): string | undefined {
-  const value = process.env[key]?.trim();
-  return value || undefined;
+function trimEnv(value: string | undefined): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed || undefined;
 }
 
 function normalizeAuthDomain(domain: string): string {
@@ -19,13 +30,13 @@ function normalizeAuthDomain(domain: string): string {
 }
 
 export function buildFirebaseConfig(): FirebaseOptions {
-  const apiKey = readEnv("NEXT_PUBLIC_FIREBASE_API_KEY");
-  const authDomain = readEnv("NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN");
-  const projectId = readEnv("NEXT_PUBLIC_FIREBASE_PROJECT_ID");
-  const storageBucket = readEnv("NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET");
-  const messagingSenderId = readEnv("NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID");
-  const appId = readEnv("NEXT_PUBLIC_FIREBASE_APP_ID");
-  const measurementId = readEnv("NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID");
+  const apiKey = trimEnv(ENV.apiKey);
+  const authDomain = trimEnv(ENV.authDomain);
+  const projectId = trimEnv(ENV.projectId);
+  const storageBucket = trimEnv(ENV.storageBucket);
+  const messagingSenderId = trimEnv(ENV.messagingSenderId);
+  const appId = trimEnv(ENV.appId);
+  const measurementId = trimEnv(ENV.measurementId);
 
   const config: FirebaseOptions = {
     apiKey: apiKey!,
@@ -46,31 +57,31 @@ export function buildFirebaseConfig(): FirebaseOptions {
 /** @deprecated use buildFirebaseConfig — kept for imports that read fields */
 export const firebaseConfig = {
   get apiKey() {
-    return readEnv("NEXT_PUBLIC_FIREBASE_API_KEY");
+    return trimEnv(ENV.apiKey);
   },
   get authDomain() {
-    const domain = readEnv("NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN");
+    const domain = trimEnv(ENV.authDomain);
     return domain ? normalizeAuthDomain(domain) : undefined;
   },
   get projectId() {
-    return readEnv("NEXT_PUBLIC_FIREBASE_PROJECT_ID");
+    return trimEnv(ENV.projectId);
   },
   get storageBucket() {
-    return readEnv("NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET");
+    return trimEnv(ENV.storageBucket);
   },
   get messagingSenderId() {
-    return readEnv("NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID");
+    return trimEnv(ENV.messagingSenderId);
   },
   get appId() {
-    return readEnv("NEXT_PUBLIC_FIREBASE_APP_ID");
+    return trimEnv(ENV.appId);
   },
   get measurementId() {
-    return readEnv("NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID");
+    return trimEnv(ENV.measurementId);
   },
 } as const;
 
 export function assertFirebaseConfig() {
-  const missing = REQUIRED_ENV_KEYS.filter((key) => !readEnv(key));
+  const missing = getMissingFirebaseEnvKeys();
 
   if (missing.length > 0) {
     throw new Error(
@@ -80,9 +91,11 @@ export function assertFirebaseConfig() {
 }
 
 export function isFirebaseConfigured(): boolean {
-  return REQUIRED_ENV_KEYS.every((key) => !!readEnv(key));
+  return getMissingFirebaseEnvKeys().length === 0;
 }
 
 export function getMissingFirebaseEnvKeys(): string[] {
-  return REQUIRED_ENV_KEYS.filter((key) => !readEnv(key));
+  return REQUIRED_FIREBASE_ENV.filter(([, value]) => !trimEnv(value)).map(
+    ([key]) => key
+  );
 }
