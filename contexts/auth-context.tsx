@@ -11,6 +11,7 @@ import {
 } from "react";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { getFirebaseAuth } from "@/lib/firebase/client";
+import { isFirebaseConfigured } from "@/lib/firebase/config";
 import {
   logOut,
   resolveGoogleRedirectResult,
@@ -41,33 +42,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const auth = getFirebaseAuth();
     let unsubscribe = () => {};
 
     void (async () => {
-      try {
-        await resolveGoogleRedirectResult();
-      } catch {
-        // Redirect result is empty on normal page loads.
+      if (!isFirebaseConfigured()) {
+        console.error("[auth] Firebase env vars missing at build time");
+        setLoading(false);
+        return;
       }
 
       try {
+        const auth = getFirebaseAuth();
+
+        try {
+          await resolveGoogleRedirectResult();
+        } catch {
+          // Redirect result is empty on normal page loads.
+        }
+
         await auth.authStateReady();
         setUser(auth.currentUser);
         unsubscribe = onAuthStateChanged(auth, setUser);
+        void getFirebaseAnalytics();
       } catch (error) {
         console.error("[auth] init failed:", error);
       } finally {
         setLoading(false);
       }
-
-      void getFirebaseAnalytics();
     })();
 
     return () => unsubscribe();
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
+    if (!isFirebaseConfigured()) {
+      throw new Error(
+        "Firebase chưa cấu hình trên server. Thêm NEXT_PUBLIC_FIREBASE_* trên Vercel và redeploy."
+      );
+    }
     try {
       await signInWithEmail(email, password);
     } catch (error) {
@@ -77,6 +89,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = useCallback(
     async (email: string, password: string, displayName?: string) => {
+      if (!isFirebaseConfigured()) {
+        throw new Error(
+          "Firebase chưa cấu hình trên server. Thêm NEXT_PUBLIC_FIREBASE_* trên Vercel và redeploy."
+        );
+      }
       try {
         await signUpWithEmail(email, password, displayName);
       } catch (error) {
@@ -87,6 +104,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const signInGoogle = useCallback(async () => {
+    if (!isFirebaseConfigured()) {
+      throw new Error(
+        "Firebase chưa cấu hình trên server. Thêm NEXT_PUBLIC_FIREBASE_* trên Vercel và redeploy."
+      );
+    }
     try {
       await signInWithGoogle();
     } catch (error) {

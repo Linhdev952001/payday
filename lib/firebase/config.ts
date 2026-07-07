@@ -78,3 +78,11 @@ export function assertFirebaseConfig() {
     );
   }
 }
+
+export function isFirebaseConfigured(): boolean {
+  return REQUIRED_ENV_KEYS.every((key) => !!readEnv(key));
+}
+
+export function getMissingFirebaseEnvKeys(): string[] {
+  return REQUIRED_ENV_KEYS.filter((key) => !readEnv(key));
+}

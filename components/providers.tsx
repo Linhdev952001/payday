@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/auth-context";
 import { I18nProvider } from "@/contexts/i18n-context";
 import { Toaster } from "@/components/ui/sonner";
+import { FirebaseSetupBanner } from "@/components/firebase-setup-banner";
 import { useUserInit } from "@/hooks/use-payday";
 
 function PaydayInit({ children }: { children: React.ReactNode }) {
@@ -29,6 +30,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+      <FirebaseSetupBanner />
       <AuthProvider>
         <QueryClientProvider client={queryClient}>
           <I18nProvider>
