@@ -2,12 +2,11 @@ import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
 import {
   browserLocalPersistence,
   getAuth,
-  indexedDBLocalPersistence,
   initializeAuth,
   type Auth,
 } from "firebase/auth";
 import { getAnalytics, isSupported, type Analytics } from "firebase/analytics";
-import { assertFirebaseConfig, firebaseConfig } from "./config";
+import { assertFirebaseConfig, buildFirebaseConfig } from "./config";
 
 let app: FirebaseApp;
 let auth: Auth;
@@ -20,7 +19,7 @@ export function getFirebaseApp(): FirebaseApp {
 
   if (!getApps().length) {
     assertFirebaseConfig();
-    app = initializeApp(firebaseConfig);
+    app = initializeApp(buildFirebaseConfig());
   } else {
     app = getApps()[0]!;
   }
@@ -30,13 +29,13 @@ export function getFirebaseApp(): FirebaseApp {
 
 export function getFirebaseAuth(): Auth {
   if (!auth) {
-    const app = getFirebaseApp();
+    const firebaseApp = getFirebaseApp();
     try {
-      auth = initializeAuth(app, {
-        persistence: [indexedDBLocalPersistence, browserLocalPersistence],
+      auth = initializeAuth(firebaseApp, {
+        persistence: browserLocalPersistence,
       });
     } catch {
-      auth = getAuth(app);
+      auth = getAuth(firebaseApp);
     }
   }
   return auth;

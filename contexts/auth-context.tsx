@@ -51,11 +51,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Redirect result is empty on normal page loads.
       }
 
-      await auth.authStateReady();
-      setUser(auth.currentUser);
-      setLoading(false);
+      try {
+        await auth.authStateReady();
+        setUser(auth.currentUser);
+        unsubscribe = onAuthStateChanged(auth, setUser);
+      } catch (error) {
+        console.error("[auth] init failed:", error);
+      } finally {
+        setLoading(false);
+      }
 
-      unsubscribe = onAuthStateChanged(auth, setUser);
       void getFirebaseAnalytics();
     })();
 

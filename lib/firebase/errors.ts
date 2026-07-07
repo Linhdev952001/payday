@@ -14,6 +14,10 @@ const messages: Record<string, string> = {
   "auth/popup-closed-by-user": "Đã hủy đăng nhập Google.",
   "auth/popup-blocked": "Trình duyệt đã chặn popup. Hãy cho phép popup.",
   "auth/network-request-failed": "Lỗi mạng. Kiểm tra kết nối internet.",
+  "auth/argument-error":
+    "Cấu hình Firebase không hợp lệ. Kiểm tra NEXT_PUBLIC_FIREBASE_* trong .env.local hoặc Vercel.",
+  "auth/invalid-api-key": "Firebase API key không hợp lệ.",
+  "auth/configuration-not-found": "Firebase Auth chưa được bật cho project này.",
 };
 
 export function getAuthErrorMessage(error: unknown): string {

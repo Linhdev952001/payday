@@ -59,8 +59,15 @@ export async function signInWithGoogle(): Promise<User> {
 
 export async function resolveGoogleRedirectResult(): Promise<User | null> {
   const auth = getFirebaseAuth();
-  const result = await getRedirectResult(auth);
-  return result?.user ?? null;
+  try {
+    const result = await getRedirectResult(auth);
+    return result?.user ?? null;
+  } catch (error) {
+    if (error instanceof FirebaseError && error.code === "auth/argument-error") {
+      return null;
+    }
+    throw error;
+  }
 }
 
 export async function logOut(): Promise<void> {
