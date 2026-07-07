@@ -1,8 +1,10 @@
 import { enUS, ko, vi as viLocale, type Locale as DateFnsLocale } from "date-fns/locale";
 import type { Locale } from "@/types";
+import { detectDeviceLocale, isSupportedLocale, matchLocale } from "./detect-locale";
 import { messages, type Messages } from "./messages";
 
 export type { Messages };
+export { detectDeviceLocale, isSupportedLocale, matchLocale };
 
 function getNested(obj: Record<string, unknown>, path: string): string | undefined {
   const value = path.split(".").reduce<unknown>((acc, part) => {

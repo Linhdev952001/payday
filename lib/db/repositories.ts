@@ -7,6 +7,7 @@ import {
   type Shift,
   type UserSettings,
 } from "@/types";
+import { detectDeviceLocale } from "@/lib/i18n/detect-locale";
 import { getDb } from "./schema";
 
 function markPending<T extends { pendingSync: boolean; updatedAt: string }>(
@@ -183,7 +184,7 @@ export async function getOrCreateSettings(userId: string): Promise<UserSettings>
     timeFormat: "24h",
     weekStartDay: "monday",
     theme: "system",
-    locale: "vi",
+    locale: detectDeviceLocale(),
     notifications: {
       logShiftReminder: true,
       logShiftTime: "21:00",

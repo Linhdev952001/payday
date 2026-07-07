@@ -1,8 +1,8 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo } from "react";
+import { createContext, useContext, useEffect, useMemo, useSyncExternalStore } from "react";
 import { useSettings } from "@/hooks/use-payday";
-import { createTranslator, getDateFnsLocale, type Translate } from "@/lib/i18n";
+import { createTranslator, detectDeviceLocale, getDateFnsLocale, type Translate } from "@/lib/i18n";
 import type { Locale } from "@/types";
 
 type I18nContextValue = {
@@ -13,9 +13,18 @@ type I18nContextValue = {
 
 const I18nContext = createContext<I18nContextValue | null>(null);
 
+function useDeviceLocale(): Locale {
+  return useSyncExternalStore(
+    () => () => {},
+    () => detectDeviceLocale(),
+    () => "vi"
+  );
+}
+
 export function I18nProvider({ children }: { children: React.ReactNode }) {
   const { data: settings } = useSettings();
-  const locale: Locale = settings?.locale ?? "vi";
+  const deviceLocale = useDeviceLocale();
+  const locale: Locale = settings?.locale ?? deviceLocale;
 
   const value = useMemo(() => {
     const t = createTranslator(locale);
