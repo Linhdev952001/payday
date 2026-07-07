@@ -10,9 +10,11 @@ import {
   type ReactNode,
 } from "react";
 import { onAuthStateChanged, type User } from "firebase/auth";
+import { toast } from "sonner";
 import { getFirebaseAuth } from "@/lib/firebase/client";
 import { isFirebaseConfigured } from "@/lib/firebase/config";
 import {
+  GOOGLE_REDIRECT_FLAG,
   logOut,
   resolveGoogleRedirectResult,
   signInWithEmail,
@@ -56,8 +58,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const redirectUser = await resolveGoogleRedirectResult();
 
         await auth.authStateReady();
-        setUser(auth.currentUser ?? redirectUser);
+        const nextUser = auth.currentUser ?? redirectUser;
+        setUser(nextUser);
         unsubscribe = onAuthStateChanged(auth, setUser);
+
+        if (nextUser && sessionStorage.getItem(GOOGLE_REDIRECT_FLAG)) {
+          sessionStorage.removeItem(GOOGLE_REDIRECT_FLAG);
+          toast.success("Đăng nhập thành công");
+        }
+
         void getFirebaseAnalytics();
       } catch (error) {
         console.error("[auth] init failed:", error);

@@ -15,11 +15,11 @@ const messages: Record<string, string> = {
   "auth/popup-blocked": "Trình duyệt đã chặn popup. Hãy cho phép popup.",
   "auth/network-request-failed": "Lỗi mạng. Kiểm tra kết nối internet.",
   "auth/unauthorized-domain":
-    "Domain chưa được phép. Vào Firebase → Authentication → Authorized domains → thêm payday-pearl.vercel.app",
+    "Domain chưa được phép. Firebase Console → Authentication → Authorized domains → thêm domain hiện tại (payday-pearl.vercel.app).",
   "auth/operation-not-supported-in-this-environment":
-    "Trình duyệt này không hỗ trợ popup. Đang chuyển sang đăng nhập redirect…",
+    "Trình duyệt trong app (Zalo/FB/Instagram…) không hỗ trợ Google. Mở payday-pearl.vercel.app bằng Safari hoặc Chrome.",
   "auth/argument-error":
-    "Không mở được cửa sổ đăng nhập Google trên thiết bị này. Thử lại hoặc dùng email.",
+    "Google đăng nhập thất bại. Kiểm tra: (1) Bật Google trong Firebase → Sign-in method, (2) Thêm domain vào Authorized domains, (3) Google Cloud → API key → không chặn domain này.",
   "auth/invalid-api-key": "Firebase API key không hợp lệ.",
   "auth/configuration-not-found": "Firebase Auth chưa được bật cho project này.",
 };

@@ -4,7 +4,6 @@ import {
   getRedirectResult,
   GoogleAuthProvider,
   signInWithEmailAndPassword,
-  signInWithPopup,
   signInWithRedirect,
   signOut,
   updateProfile,
@@ -13,24 +12,13 @@ import {
 import { getFirebaseAuth } from "./client";
 
 const googleProvider = new GoogleAuthProvider();
+export const GOOGLE_REDIRECT_FLAG = "payday-google-redirect";
 
-const REDIRECT_FALLBACK_CODES = new Set([
-  "auth/popup-blocked",
-  "auth/cancelled-popup-request",
-  "auth/operation-not-supported-in-this-environment",
-  "auth/argument-error",
-]);
-
-function shouldUseGoogleRedirect(): boolean {
-  if (typeof window === "undefined") return false;
-
-  const ua = navigator.userAgent;
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(ua);
-  const isStandalone =
-    window.matchMedia("(display-mode: standalone)").matches ||
-    (navigator as Navigator & { standalone?: boolean }).standalone === true;
-
-  return isMobile || isStandalone;
+function isInAppBrowser(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return /FBAN|FBAV|Instagram|Line\/|Twitter|MicroMessenger|KAKAOTALK/i.test(
+    navigator.userAgent
+  );
 }
 
 export async function signUpWithEmail(
@@ -58,23 +46,24 @@ export async function signInWithEmail(
 }
 
 export async function signInWithGoogle(): Promise<User> {
-  const auth = getFirebaseAuth();
-
-  if (shouldUseGoogleRedirect()) {
-    await signInWithRedirect(auth, googleProvider);
-    throw new Error("REDIRECT_PENDING");
+  if (isInAppBrowser()) {
+    throw new FirebaseError(
+      "auth/operation-not-supported-in-this-environment",
+      "in-app-browser"
+    );
   }
+
+  const auth = getFirebaseAuth();
+  sessionStorage.setItem(GOOGLE_REDIRECT_FLAG, "1");
 
   try {
-    const credential = await signInWithPopup(auth, googleProvider);
-    return credential.user;
+    await signInWithRedirect(auth, googleProvider);
   } catch (error) {
-    if (error instanceof FirebaseError && REDIRECT_FALLBACK_CODES.has(error.code)) {
-      await signInWithRedirect(auth, googleProvider);
-      throw new Error("REDIRECT_PENDING");
-    }
+    sessionStorage.removeItem(GOOGLE_REDIRECT_FLAG);
     throw error;
   }
+
+  throw new Error("REDIRECT_PENDING");
 }
 
 export async function resolveGoogleRedirectResult(): Promise<User | null> {
@@ -83,6 +72,7 @@ export async function resolveGoogleRedirectResult(): Promise<User | null> {
     const result = await getRedirectResult(auth);
     return result?.user ?? null;
   } catch (error) {
+    sessionStorage.removeItem(GOOGLE_REDIRECT_FLAG);
     if (error instanceof FirebaseError && error.code === "auth/argument-error") {
       return null;
     }
