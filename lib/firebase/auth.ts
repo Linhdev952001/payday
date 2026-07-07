@@ -1,23 +1,21 @@
 import { FirebaseError } from "firebase/app";
 import {
   createUserWithEmailAndPassword,
-  getRedirectResult,
+  EmailAuthProvider,
   GoogleAuthProvider,
+  linkWithCredential,
   signInWithEmailAndPassword,
-  signInWithRedirect,
+  signInWithPopup,
   signOut,
   updateProfile,
   type User,
 } from "firebase/auth";
 import { getFirebaseAuth } from "./client";
 
-/** ponytail: flip to true when Google sign-in is ready again */
-export const GOOGLE_AUTH_ENABLED = false;
+/** ponytail: set false after users link email/password; keep true until then */
+export const GOOGLE_AUTH_ENABLED = true;
 
 const googleProvider = new GoogleAuthProvider();
-export const GOOGLE_REDIRECT_FLAG = "payday-google-redirect";
-
-let redirectResultPromise: Promise<User | null> | null = null;
 
 function isInAppBrowser(): boolean {
   if (typeof navigator === "undefined") return false;
@@ -59,34 +57,29 @@ export async function signInWithGoogle(): Promise<User> {
   }
 
   const auth = getFirebaseAuth();
-  sessionStorage.setItem(GOOGLE_REDIRECT_FLAG, "1");
-
-  try {
-    await signInWithRedirect(auth, googleProvider);
-  } catch (error) {
-    sessionStorage.removeItem(GOOGLE_REDIRECT_FLAG);
-    throw error;
-  }
-
-  throw new Error("REDIRECT_PENDING");
+  const result = await signInWithPopup(auth, googleProvider);
+  return result.user;
 }
 
-/** ponytail: singleton promise — getRedirectResult() only works once per redirect */
-export function resolveGoogleRedirectResult(): Promise<User | null> {
-  if (!redirectResultPromise) {
-    redirectResultPromise = (async () => {
-      const auth = getFirebaseAuth();
-      try {
-        const result = await getRedirectResult(auth);
-        return result?.user ?? null;
-      } catch (error) {
-        sessionStorage.removeItem(GOOGLE_REDIRECT_FLAG);
-        console.error("[auth] getRedirectResult failed:", error);
-        throw error;
-      }
-    })();
+export function hasPasswordLogin(user: User): boolean {
+  return user.providerData.some((provider) => provider.providerId === "password");
+}
+
+export async function linkEmailPassword(password: string): Promise<User> {
+  const auth = getFirebaseAuth();
+  const user = auth.currentUser;
+
+  if (!user?.email) {
+    throw new FirebaseError("auth/invalid-email", "missing-email");
   }
-  return redirectResultPromise;
+
+  if (hasPasswordLogin(user)) {
+    throw new FirebaseError("auth/provider-already-linked", "password-linked");
+  }
+
+  const credential = EmailAuthProvider.credential(user.email, password);
+  const result = await linkWithCredential(user, credential);
+  return result.user;
 }
 
 export async function logOut(): Promise<void> {

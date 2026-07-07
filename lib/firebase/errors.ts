@@ -22,6 +22,9 @@ const messages: Record<string, string> = {
     "Google đăng nhập thất bại. Kiểm tra: (1) Bật Google trong Firebase → Sign-in method, (2) Thêm domain vào Authorized domains, (3) Google Cloud → API key → không chặn domain này.",
   "auth/invalid-api-key": "Firebase API key không hợp lệ.",
   "auth/configuration-not-found": "Firebase Auth chưa được bật cho project này.",
+  "auth/provider-already-linked": "Tài khoản này đã có mật khẩu.",
+  "auth/requires-recent-login":
+    "Vui lòng đăng xuất, đăng nhập lại rồi thử đặt mật khẩu.",
 };
 
 export function getAuthErrorMessage(error: unknown): string {

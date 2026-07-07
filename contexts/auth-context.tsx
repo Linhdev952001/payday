@@ -10,14 +10,11 @@ import {
   type ReactNode,
 } from "react";
 import { onAuthStateChanged, type User } from "firebase/auth";
-import { toast } from "sonner";
 import { getFirebaseAuth, getFirebaseAnalytics } from "@/lib/firebase/client";
 import { isFirebaseConfigured } from "@/lib/firebase/config";
 import {
   GOOGLE_AUTH_ENABLED,
-  GOOGLE_REDIRECT_FLAG,
   logOut,
-  resolveGoogleRedirectResult,
   signInWithEmail,
   signInWithGoogle,
   signUpWithEmail,
@@ -39,74 +36,27 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function shouldLandInApp(pathname: string): boolean {
-  return pathname === "/" || pathname === "/login" || pathname === "/register";
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let unsubscribe = () => {};
+    if (!isFirebaseConfigured()) {
+      console.error("[auth] Firebase env vars missing at build time");
+      setLoading(false);
+      return;
+    }
 
-    void (async () => {
-      if (!isFirebaseConfigured()) {
-        console.error("[auth] Firebase env vars missing at build time");
-        setLoading(false);
-        return;
-      }
+    // ponytail: clear stale flag from old redirect flow
+    sessionStorage.removeItem("payday-google-redirect");
 
-      const pendingGoogle =
-        GOOGLE_AUTH_ENABLED && sessionStorage.getItem(GOOGLE_REDIRECT_FLAG);
+    const auth = getFirebaseAuth();
+    const unsubscribe = onAuthStateChanged(auth, setUser);
 
-      try {
-        const auth = getFirebaseAuth();
-
-        const redirectUser = GOOGLE_AUTH_ENABLED
-          ? await resolveGoogleRedirectResult().catch((error) => {
-              if (pendingGoogle) {
-                toast.error(getAuthErrorMessage(error));
-              }
-              return null;
-            })
-          : null;
-
-        unsubscribe = onAuthStateChanged(auth, setUser);
-
-        await auth.authStateReady();
-
-        const authUser = auth.currentUser ?? redirectUser;
-        if (authUser) {
-          setUser(authUser);
-        }
-
-        if (pendingGoogle) {
-          sessionStorage.removeItem(GOOGLE_REDIRECT_FLAG);
-          if (authUser) {
-            toast.success("Đăng nhập thành công");
-            if (shouldLandInApp(window.location.pathname)) {
-              window.location.replace("/dashboard");
-              return;
-            }
-          } else {
-            toast.error(
-              "Đăng nhập Google không hoàn tất. Thử lại hoặc dùng email."
-            );
-          }
-        }
-
-        void getFirebaseAnalytics();
-      } catch (error) {
-        console.error("[auth] init failed:", error);
-        if (pendingGoogle) {
-          sessionStorage.removeItem(GOOGLE_REDIRECT_FLAG);
-          toast.error(getAuthErrorMessage(error));
-        }
-      } finally {
-        setLoading(false);
-      }
-    })();
+    void auth.authStateReady().finally(() => {
+      setLoading(false);
+      void getFirebaseAnalytics();
+    });
 
     return () => unsubscribe();
   }, []);
@@ -152,9 +102,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await signInWithGoogle();
     } catch (error) {
-      if (error instanceof Error && error.message === "REDIRECT_PENDING") {
-        return;
-      }
       throw new Error(getAuthErrorMessage(error));
     }
   }, []);

@@ -11,6 +11,7 @@ import {
   FileSpreadsheet,
   FileText,
   LogOut,
+  Loader2,
   Monitor,
   Moon,
   Sun,
@@ -36,6 +37,8 @@ import { shiftsToCsv, downloadFile } from "@/lib/export/csv";
 import { exportShiftsToExcel } from "@/lib/export/excel";
 import { exportJsonBackup, importJsonBackup } from "@/lib/export/json";
 import { syncUserData } from "@/lib/firebase/sync";
+import { getAuthErrorMessage } from "@/lib/firebase/errors";
+import { hasPasswordLogin, linkEmailPassword } from "@/lib/firebase/auth";
 import { formatAmountInput, parseAmountInput } from "@/lib/pay/amount-input";
 import { formatCurrency } from "@/lib/pay/calculate";
 import {
@@ -148,6 +151,10 @@ export function SettingsSummary() {
   const invalidate = useInvalidatePayday();
   const fileRef = useRef<HTMLInputElement>(null);
   const [incomeGoal, setIncomeGoal] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [passwordSet, setPasswordSet] = useState(false);
 
   useEffect(() => {
     if (settings?.incomeGoal) {
@@ -156,6 +163,9 @@ export function SettingsSummary() {
   }, [settings?.incomeGoal]);
 
   if (!settings || !user) return null;
+
+  const needsPassword =
+    !passwordSet && !!user?.email && !hasPasswordLogin(user);
 
   const userId = user.uid;
 
@@ -222,6 +232,28 @@ export function SettingsSummary() {
     toast.success(t("settings.goalSaved"));
   }
 
+  async function handleSetPassword(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (password !== confirmPassword) {
+      toast.error(t("settings.passwordMismatch"));
+      return;
+    }
+
+    setSavingPassword(true);
+    try {
+      await linkEmailPassword(password);
+      setPasswordSet(true);
+      setPassword("");
+      setConfirmPassword("");
+      toast.success(t("settings.passwordSaved"));
+    } catch (error) {
+      toast.error(getAuthErrorMessage(error));
+    } finally {
+      setSavingPassword(false);
+    }
+  }
+
   async function handleSignOut() {
     await signOut();
     router.push("/login");
@@ -267,6 +299,58 @@ export function SettingsSummary() {
           </div>
         </div>
       </div>
+
+      {needsPassword && (
+        <section className="page-enter stagger-1 space-y-2.5">
+          <SectionLabel>{t("settings.setPassword")}</SectionLabel>
+          <form
+            onSubmit={(e) => void handleSetPassword(e)}
+            className="space-y-3 rounded-3xl bg-card px-5 py-5"
+          >
+            <p className="text-sm text-muted-foreground">{t("settings.setPasswordDesc")}</p>
+            <div className="space-y-1.5">
+              <label
+                htmlFor="set-password"
+                className="px-1 text-[13px] font-medium text-muted-foreground"
+              >
+                {t("auth.password")}
+              </label>
+              <Input
+                id="set-password"
+                type="password"
+                autoComplete="new-password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label
+                htmlFor="confirm-password"
+                className="px-1 text-[13px] font-medium text-muted-foreground"
+              >
+                {t("settings.confirmPassword")}
+              </label>
+              <Input
+                id="confirm-password"
+                type="password"
+                autoComplete="new-password"
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength={6}
+              />
+            </div>
+            <Button type="submit" className="w-full" disabled={savingPassword}>
+              {savingPassword && <Loader2 className="animate-spin" />}
+              {t("settings.setPassword")}
+            </Button>
+          </form>
+        </section>
+      )}
 
       {/* Income goal */}
       <section className="page-enter stagger-2 space-y-2.5">

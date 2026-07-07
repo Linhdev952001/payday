@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
-import { GOOGLE_REDIRECT_FLAG } from "@/lib/firebase/auth";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -56,16 +55,11 @@ export function GoogleSignInButton({
       toast.success("Đăng nhập thành công");
       router.push("/dashboard");
     } catch (error) {
-      if (error instanceof Error && error.message === "REDIRECT_PENDING") {
-        return;
-      }
       toast.error(
         error instanceof Error ? error.message : "Không thể đăng nhập Google"
       );
     } finally {
-      if (!sessionStorage.getItem(GOOGLE_REDIRECT_FLAG)) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
   }
 
