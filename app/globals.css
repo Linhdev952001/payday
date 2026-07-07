@@ -1,0 +1,276 @@
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@toss/tds-colors/colors.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: "Pretendard Variable", Pretendard, ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  --background: var(--lightThemeBackground);
+  --foreground: var(--lightThemeGrey900);
+  --card: var(--lightThemeBackgroundLevel01);
+  --card-foreground: var(--lightThemeGrey900);
+  --popover: var(--lightThemeBackgroundLevel01);
+  --popover-foreground: var(--lightThemeGrey900);
+  --primary: var(--lightThemeBlue500);
+  --primary-foreground: var(--white);
+  --secondary: var(--lightThemeGrey100);
+  --secondary-foreground: var(--lightThemeGrey900);
+  --muted: var(--lightThemeGrey100);
+  --muted-foreground: var(--lightThemeGrey500);
+  --accent: var(--lightThemeBlue50);
+  --accent-foreground: var(--lightThemeBlue500);
+  --destructive: var(--lightThemeRed500);
+  --border: var(--lightThemeHairlineBorder);
+  --input: var(--lightThemeGrey100);
+  --ring: var(--lightThemeBlue500);
+  --chart-1: var(--lightThemeBlue500);
+  --chart-2: var(--lightThemeGreen500);
+  --chart-3: var(--lightThemeYellow500);
+  --chart-4: var(--lightThemePurple500);
+  --chart-5: var(--lightThemeRed500);
+  --radius: 1rem;
+  --sidebar: var(--lightThemeBackgroundLevel01);
+  --sidebar-foreground: var(--lightThemeGrey900);
+  --sidebar-primary: var(--lightThemeBlue500);
+  --sidebar-primary-foreground: var(--white);
+  --sidebar-accent: var(--lightThemeGrey100);
+  --sidebar-accent-foreground: var(--lightThemeGrey900);
+  --sidebar-border: var(--lightThemeHairlineBorder);
+  --sidebar-ring: var(--lightThemeBlue500);
+}
+
+.dark {
+  --background: var(--darkThemeBackground);
+  --foreground: var(--darkThemeGrey900);
+  --card: var(--darkThemeBackgroundLevel01);
+  --card-foreground: var(--darkThemeGrey900);
+  --popover: var(--darkThemeBackgroundLevel01);
+  --popover-foreground: var(--darkThemeGrey900);
+  --primary: var(--darkThemeBlue500);
+  --primary-foreground: var(--white);
+  --secondary: var(--darkThemeBackgroundLevel02);
+  --secondary-foreground: var(--darkThemeGrey900);
+  --muted: var(--darkThemeGrey100);
+  --muted-foreground: var(--darkThemeGrey500);
+  --accent: var(--darkThemeBlue50);
+  --accent-foreground: var(--darkThemeBlue500);
+  --destructive: var(--darkThemeRed500);
+  --border: var(--darkThemeHairlineBorder);
+  --input: var(--darkThemeGrey100);
+  --ring: var(--darkThemeBlue500);
+  --chart-1: var(--darkThemeBlue500);
+  --chart-2: var(--darkThemeGreen500);
+  --chart-3: var(--darkThemeYellow500);
+  --chart-4: var(--darkThemePurple500);
+  --chart-5: var(--darkThemeRed500);
+  --sidebar: var(--darkThemeBackgroundLevel01);
+  --sidebar-foreground: var(--darkThemeGrey900);
+  --sidebar-primary: var(--darkThemeBlue500);
+  --sidebar-primary-foreground: var(--white);
+  --sidebar-accent: var(--darkThemeGrey100);
+  --sidebar-accent-foreground: var(--darkThemeGrey900);
+  --sidebar-border: var(--darkThemeHairlineBorder);
+  --sidebar-ring: var(--darkThemeBlue500);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "tnum" 1, "ss01" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+  html {
+    @apply font-sans;
+    color-scheme: dark;
+  }
+}
+
+@layer utilities {
+  .pt-safe-top {
+    padding-top: constant(safe-area-inset-top);
+    padding-top: env(safe-area-inset-top);
+  }
+  .pb-safe-bottom {
+    padding-bottom: constant(safe-area-inset-bottom);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .top-safe {
+    top: constant(safe-area-inset-top);
+    top: env(safe-area-inset-top);
+  }
+  .toss-card {
+    @apply rounded-2xl bg-card;
+  }
+  .toss-elevated {
+    @apply rounded-2xl bg-secondary;
+  }
+  .toss-label {
+    @apply text-[13px] text-muted-foreground;
+  }
+  .toss-amount {
+    @apply text-[32px] font-bold tracking-tight text-foreground tabular-nums;
+  }
+  .toss-section-title {
+    @apply text-[17px] font-semibold text-foreground;
+  }
+  .toss-page-title {
+    @apply text-[26px] font-bold tracking-tight text-foreground;
+  }
+  .page-enter {
+    animation: page-enter 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .stagger-1 { animation-delay: 40ms; }
+  .stagger-2 { animation-delay: 80ms; }
+  .stagger-3 { animation-delay: 120ms; }
+  .stagger-4 { animation-delay: 160ms; }
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Work calendar: stretch grid rows to fill space above bottom nav */
+@layer components {
+  .calendar-fill-height {
+    @apply flex min-h-0 flex-1 flex-col;
+  }
+
+  .calendar-fill-height table {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    flex: 1;
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .calendar-fill-height thead {
+    display: block;
+    flex-shrink: 0;
+  }
+
+  .calendar-fill-height thead tr {
+    display: flex;
+    width: 100%;
+  }
+
+  .calendar-fill-height thead th {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .calendar-fill-height tbody {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+  }
+
+  .calendar-fill-height tbody tr {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+  }
+
+  .calendar-fill-height tbody td {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    padding: 0;
+    vertical-align: top;
+  }
+
+  .calendar-fill-height tbody td > button {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+  }
+
+  /* react-day-picker defaults shrink grid to fit-content / fixed cell width */
+  .calendar-fill-height .rdp-months {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  .calendar-fill-height .rdp-month,
+  .calendar-fill-height .rdp-month_grid {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  .calendar-fill-height .rdp-day {
+    width: auto !important;
+    height: auto !important;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .calendar-fill-height .rdp-day_button {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+  }
+}
