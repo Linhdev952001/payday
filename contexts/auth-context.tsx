@@ -11,7 +11,7 @@ import {
 } from "react";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { toast } from "sonner";
-import { getFirebaseAuth } from "@/lib/firebase/client";
+import { getFirebaseAuth, getFirebaseAnalytics } from "@/lib/firebase/client";
 import { isFirebaseConfigured } from "@/lib/firebase/config";
 import {
   GOOGLE_REDIRECT_FLAG,
@@ -22,7 +22,6 @@ import {
   signUpWithEmail,
 } from "@/lib/firebase/auth";
 import { getAuthErrorMessage } from "@/lib/firebase/errors";
-import { getFirebaseAnalytics } from "@/lib/firebase/client";
 
 type AuthContextValue = {
   user: User | null;
@@ -39,6 +38,10 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+function shouldLandInApp(pathname: string): boolean {
+  return pathname === "/" || pathname === "/login" || pathname === "/register";
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -53,23 +56,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      const pendingGoogle = sessionStorage.getItem(GOOGLE_REDIRECT_FLAG);
+
       try {
         const auth = getFirebaseAuth();
-        const redirectUser = await resolveGoogleRedirectResult();
-
-        await auth.authStateReady();
-        const nextUser = auth.currentUser ?? redirectUser;
-        setUser(nextUser);
         unsubscribe = onAuthStateChanged(auth, setUser);
 
-        if (nextUser && sessionStorage.getItem(GOOGLE_REDIRECT_FLAG)) {
+        const redirectUser = await resolveGoogleRedirectResult().catch(
+          (error) => {
+            if (pendingGoogle) {
+              toast.error(getAuthErrorMessage(error));
+            }
+            return null;
+          }
+        );
+
+        await auth.authStateReady();
+
+        const authUser = auth.currentUser ?? redirectUser;
+        if (authUser) {
+          setUser(authUser);
+        }
+
+        if (pendingGoogle) {
           sessionStorage.removeItem(GOOGLE_REDIRECT_FLAG);
-          toast.success("Đăng nhập thành công");
+          if (authUser) {
+            toast.success("Đăng nhập thành công");
+            if (shouldLandInApp(window.location.pathname)) {
+              window.location.replace("/dashboard");
+              return;
+            }
+          } else {
+            toast.error(
+              "Đăng nhập Google không hoàn tất. Thử lại hoặc dùng email."
+            );
+          }
         }
 
         void getFirebaseAnalytics();
       } catch (error) {
         console.error("[auth] init failed:", error);
+        if (pendingGoogle) {
+          sessionStorage.removeItem(GOOGLE_REDIRECT_FLAG);
+          toast.error(getAuthErrorMessage(error));
+        }
       } finally {
         setLoading(false);
       }

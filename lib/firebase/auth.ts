@@ -14,6 +14,8 @@ import { getFirebaseAuth } from "./client";
 const googleProvider = new GoogleAuthProvider();
 export const GOOGLE_REDIRECT_FLAG = "payday-google-redirect";
 
+let redirectResultPromise: Promise<User | null> | null = null;
+
 function isInAppBrowser(): boolean {
   if (typeof navigator === "undefined") return false;
   return /FBAN|FBAV|Instagram|Line\/|Twitter|MicroMessenger|KAKAOTALK/i.test(
@@ -66,18 +68,22 @@ export async function signInWithGoogle(): Promise<User> {
   throw new Error("REDIRECT_PENDING");
 }
 
-export async function resolveGoogleRedirectResult(): Promise<User | null> {
-  const auth = getFirebaseAuth();
-  try {
-    const result = await getRedirectResult(auth);
-    return result?.user ?? null;
-  } catch (error) {
-    sessionStorage.removeItem(GOOGLE_REDIRECT_FLAG);
-    if (error instanceof FirebaseError && error.code === "auth/argument-error") {
-      return null;
-    }
-    throw error;
+/** ponytail: singleton promise — getRedirectResult() only works once per redirect */
+export function resolveGoogleRedirectResult(): Promise<User | null> {
+  if (!redirectResultPromise) {
+    redirectResultPromise = (async () => {
+      const auth = getFirebaseAuth();
+      try {
+        const result = await getRedirectResult(auth);
+        return result?.user ?? null;
+      } catch (error) {
+        sessionStorage.removeItem(GOOGLE_REDIRECT_FLAG);
+        console.error("[auth] getRedirectResult failed:", error);
+        throw error;
+      }
+    })();
   }
+  return redirectResultPromise;
 }
 
 export async function logOut(): Promise<void> {
