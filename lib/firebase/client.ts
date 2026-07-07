@@ -1,10 +1,5 @@
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
-import {
-  browserLocalPersistence,
-  getAuth,
-  initializeAuth,
-  type Auth,
-} from "firebase/auth";
+import { getAuth, type Auth } from "firebase/auth";
 import { getAnalytics, isSupported, type Analytics } from "firebase/analytics";
 import { assertFirebaseConfig, buildFirebaseConfig } from "./config";
 
@@ -29,14 +24,7 @@ export function getFirebaseApp(): FirebaseApp {
 
 export function getFirebaseAuth(): Auth {
   if (!auth) {
-    const firebaseApp = getFirebaseApp();
-    try {
-      auth = initializeAuth(firebaseApp, {
-        persistence: browserLocalPersistence,
-      });
-    } catch {
-      auth = getAuth(firebaseApp);
-    }
+    auth = getAuth(getFirebaseApp());
   }
   return auth;
 }
@@ -48,6 +36,10 @@ export async function getFirebaseAnalytics(): Promise<Analytics | null> {
   const supported = await isSupported();
   if (!supported) return null;
 
-  analytics = getAnalytics(getFirebaseApp());
-  return analytics;
+  try {
+    analytics = getAnalytics(getFirebaseApp());
+    return analytics;
+  } catch {
+    return null;
+  }
 }

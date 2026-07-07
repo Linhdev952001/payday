@@ -53,15 +53,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       try {
         const auth = getFirebaseAuth();
-
-        try {
-          await resolveGoogleRedirectResult();
-        } catch {
-          // Redirect result is empty on normal page loads.
-        }
+        const redirectUser = await resolveGoogleRedirectResult();
 
         await auth.authStateReady();
-        setUser(auth.currentUser);
+        setUser(auth.currentUser ?? redirectUser);
         unsubscribe = onAuthStateChanged(auth, setUser);
         void getFirebaseAnalytics();
       } catch (error) {
@@ -112,6 +107,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await signInWithGoogle();
     } catch (error) {
+      if (error instanceof Error && error.message === "REDIRECT_PENDING") {
+        return;
+      }
       throw new Error(getAuthErrorMessage(error));
     }
   }, []);

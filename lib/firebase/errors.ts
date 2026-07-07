@@ -14,15 +14,21 @@ const messages: Record<string, string> = {
   "auth/popup-closed-by-user": "Đã hủy đăng nhập Google.",
   "auth/popup-blocked": "Trình duyệt đã chặn popup. Hãy cho phép popup.",
   "auth/network-request-failed": "Lỗi mạng. Kiểm tra kết nối internet.",
+  "auth/unauthorized-domain":
+    "Domain chưa được phép. Vào Firebase → Authentication → Authorized domains → thêm payday-pearl.vercel.app",
+  "auth/operation-not-supported-in-this-environment":
+    "Trình duyệt này không hỗ trợ popup. Đang chuyển sang đăng nhập redirect…",
   "auth/argument-error":
-    "Cấu hình Firebase không hợp lệ. Kiểm tra NEXT_PUBLIC_FIREBASE_* trong .env.local hoặc Vercel.",
+    "Không mở được cửa sổ đăng nhập Google trên thiết bị này. Thử lại hoặc dùng email.",
   "auth/invalid-api-key": "Firebase API key không hợp lệ.",
   "auth/configuration-not-found": "Firebase Auth chưa được bật cho project này.",
 };
 
 export function getAuthErrorMessage(error: unknown): string {
   if (error instanceof FirebaseError) {
-    return messages[error.code] ?? error.message;
+    const mapped = messages[error.code];
+    if (mapped) return mapped;
+    return error.message || error.code;
   }
 
   if (error instanceof Error) {
