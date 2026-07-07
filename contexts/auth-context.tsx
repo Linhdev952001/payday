@@ -42,19 +42,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const auth = getFirebaseAuth();
+    let unsubscribe = () => {};
 
-    void resolveGoogleRedirectResult().catch(() => {
-      // Redirect result is empty on normal page loads.
-    });
+    void (async () => {
+      try {
+        await resolveGoogleRedirectResult();
+      } catch {
+        // Redirect result is empty on normal page loads.
+      }
 
-    const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
-      setUser(nextUser);
+      await auth.authStateReady();
+      setUser(auth.currentUser);
       setLoading(false);
-    });
 
-    void getFirebaseAnalytics();
+      unsubscribe = onAuthStateChanged(auth, setUser);
+      void getFirebaseAnalytics();
+    })();
 
-    return unsubscribe;
+    return () => unsubscribe();
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
