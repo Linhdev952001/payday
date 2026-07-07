@@ -60,7 +60,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       try {
         const auth = getFirebaseAuth();
-        unsubscribe = onAuthStateChanged(auth, setUser);
 
         const redirectUser = await resolveGoogleRedirectResult().catch(
           (error) => {
@@ -70,6 +69,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             return null;
           }
         );
+
+        unsubscribe = onAuthStateChanged(auth, setUser);
 
         await auth.authStateReady();
 
