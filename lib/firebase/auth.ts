@@ -11,6 +11,9 @@ import {
 } from "firebase/auth";
 import { getFirebaseAuth } from "./client";
 
+/** ponytail: flip to true when Google sign-in is ready again */
+export const GOOGLE_AUTH_ENABLED = false;
+
 const googleProvider = new GoogleAuthProvider();
 export const GOOGLE_REDIRECT_FLAG = "payday-google-redirect";
 

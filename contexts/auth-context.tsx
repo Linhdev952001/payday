@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { getFirebaseAuth, getFirebaseAnalytics } from "@/lib/firebase/client";
 import { isFirebaseConfigured } from "@/lib/firebase/config";
 import {
+  GOOGLE_AUTH_ENABLED,
   GOOGLE_REDIRECT_FLAG,
   logOut,
   resolveGoogleRedirectResult,
@@ -56,19 +57,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const pendingGoogle = sessionStorage.getItem(GOOGLE_REDIRECT_FLAG);
+      const pendingGoogle =
+        GOOGLE_AUTH_ENABLED && sessionStorage.getItem(GOOGLE_REDIRECT_FLAG);
 
       try {
         const auth = getFirebaseAuth();
 
-        const redirectUser = await resolveGoogleRedirectResult().catch(
-          (error) => {
-            if (pendingGoogle) {
-              toast.error(getAuthErrorMessage(error));
-            }
-            return null;
-          }
-        );
+        const redirectUser = GOOGLE_AUTH_ENABLED
+          ? await resolveGoogleRedirectResult().catch((error) => {
+              if (pendingGoogle) {
+                toast.error(getAuthErrorMessage(error));
+              }
+              return null;
+            })
+          : null;
 
         unsubscribe = onAuthStateChanged(auth, setUser);
 
@@ -139,6 +141,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const signInGoogle = useCallback(async () => {
+    if (!GOOGLE_AUTH_ENABLED) {
+      throw new Error("Đăng nhập Google tạm thời không khả dụng.");
+    }
     if (!isFirebaseConfigured()) {
       throw new Error(
         "Firebase chưa cấu hình trên server. Thêm NEXT_PUBLIC_FIREBASE_* trên Vercel và redeploy."
