@@ -75,12 +75,12 @@ export function GoogleSignInButton({
       type="button"
       variant={variant}
       size={size}
-      className={cn("w-full", className)}
+      className={cn("w-full gap-3", className)}
       onClick={handleGoogleSignIn}
       disabled={loading}
     >
       {loading ? <Loader2 className="animate-spin" /> : <GoogleIcon />}
-      {label}
+      <span>{label}</span>
     </Button>
   );
 }

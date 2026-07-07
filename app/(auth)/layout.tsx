@@ -11,23 +11,20 @@ export default function AuthLayout({
   const t = useT();
 
   return (
-    <div className="relative min-h-dvh overflow-hidden bg-background pt-safe-top">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,color-mix(in_srgb,var(--primary)_12%,transparent),transparent)]"
-      />
-      <header className="relative z-10 flex items-center justify-between px-6 py-6 sm:px-12">
-        <Link href="/" className="text-xl font-bold tracking-tight">
+    <div className="relative flex min-h-dvh flex-col overflow-hidden bg-background pt-safe-top">
+      <div aria-hidden className="auth-mesh pointer-events-none absolute inset-0" />
+      <header className="relative z-10 flex h-14 shrink-0 items-center justify-between px-5">
+        <Link href="/" className="text-lg font-bold tracking-tight">
           Payday
         </Link>
         <Link
           href="/"
-          className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+          className="text-[13px] font-medium text-muted-foreground transition-colors active:text-foreground"
         >
           {t("auth.home")}
         </Link>
       </header>
-      <main className="relative z-10 flex min-h-[calc(100vh-5rem)] items-center justify-center px-6 pb-16 sm:px-12">
+      <main className="relative z-10 flex min-h-0 flex-1 flex-col px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
         {children}
       </main>
     </div>
