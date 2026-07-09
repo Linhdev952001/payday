@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import {
@@ -11,6 +12,10 @@ import {
   Plus,
   Settings,
 } from "lucide-react";
+import {
+  CalendarJobFilter,
+  type CalendarJobFilterValue,
+} from "@/components/calendar/calendar-job-filter";
 import { JobColorDot } from "@/components/jobs/job-color-picker";
 import { Button } from "@/components/ui/button";
 import { ListGroup, ListRow, ListSection } from "@/components/ui/list-section";
@@ -21,16 +26,15 @@ import { useDashboardStats, useJobs, useSettings } from "@/hooks/use-payday";
 import { formatCurrency } from "@/lib/pay/calculate";
 import { formatDuration } from "@/lib/time/format";
 import { useAppStore } from "@/stores/app-store";
-import { cn } from "@/lib/utils";
 
 export function DashboardSummary() {
   const { user } = useAuth();
   const t = useT();
   const { dateLocale } = useI18n();
   const { data: jobs = [] } = useJobs();
-  const { data: stats } = useDashboardStats();
+  const [jobFilter, setJobFilter] = useState<CalendarJobFilterValue>("all");
+  const { data: stats } = useDashboardStats(jobFilter);
   const { data: settings } = useSettings();
-  const selectedJobId = useAppStore((s) => s.selectedJobId);
   const setSelectedJobId = useAppStore((s) => s.setSelectedJobId);
 
   const currency = settings?.currency ?? "KRW";
@@ -39,8 +43,8 @@ export function DashboardSummary() {
   const todayMinutes = stats?.todayMinutes ?? 0;
   const monthMinutes = stats?.monthMinutes ?? 0;
   const incomeGoal = settings?.incomeGoal;
-  const activeJobId = selectedJobId ?? jobs[0]?.id ?? "";
-  const activeJob = jobs.find((j) => j.id === activeJobId);
+  const activeJob =
+    jobFilter === "all" ? null : jobs.find((j) => j.id === jobFilter);
 
   const goalProgress =
     incomeGoal && incomeGoal > 0
@@ -64,30 +68,15 @@ export function DashboardSummary() {
       </header>
 
       {jobs.length > 0 && (
-        <div className="page-enter stagger-1 flex gap-1.5 overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {jobs.map((job) => {
-            const active = job.id === activeJobId;
-            return (
-              <button
-                key={job.id}
-                type="button"
-                onClick={() => setSelectedJobId(job.id)}
-                className={cn(
-                  "flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold transition-colors",
-                  active
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-secondary text-muted-foreground"
-                )}
-              >
-                <JobColorDot
-                  color={job.color}
-                  className={cn("size-2", active && "ring-1 ring-primary-foreground/40")}
-                />
-                <span className="max-w-[9rem] truncate">{job.name}</span>
-              </button>
-            );
-          })}
-        </div>
+        <CalendarJobFilter
+          jobs={jobs}
+          value={jobFilter}
+          onChange={(value) => {
+            setJobFilter(value);
+            if (value !== "all") setSelectedJobId(value);
+          }}
+          className="page-enter stagger-1 [&_button]:py-2"
+        />
       )}
 
       <section className="page-enter stagger-2 relative overflow-hidden rounded-3xl bg-card px-5 py-6">

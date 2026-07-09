@@ -447,20 +447,25 @@ export async function updateShift(
   return saved;
 }
 
-export async function getDashboardStats(userId: string, job?: Job | null) {
+export async function getDashboardStats(
+  userId: string,
+  jobFilter: string | "all" = "all"
+) {
   const today = todayDateString();
   const monthStart = `${today.slice(0, 7)}-01`;
   const monthEnd = today;
 
   const shifts = await getShiftsByDateRange(userId, monthStart, monthEnd);
-  const todayShifts = shifts.filter((s) => s.date === today && s.status !== "off");
+  const filtered =
+    jobFilter === "all" ? shifts : shifts.filter((s) => s.jobId === jobFilter);
+  const todayShifts = filtered.filter((s) => s.date === today && s.status !== "off");
 
   const todayMinutes = todayShifts.reduce((sum, s) => sum + s.workedMinutes, 0);
   const todayEarned = todayShifts.reduce((sum, s) => sum + s.earnedAmount, 0);
-  const monthMinutes = shifts
+  const monthMinutes = filtered
     .filter((s) => s.status === "completed" || s.status === "manual")
     .reduce((sum, s) => sum + s.workedMinutes, 0);
-  const monthEarned = shifts
+  const monthEarned = filtered
     .filter((s) => s.status === "completed" || s.status === "manual")
     .reduce((sum, s) => sum + s.earnedAmount, 0);
 
@@ -468,23 +473,31 @@ export async function getDashboardStats(userId: string, job?: Job | null) {
   let liveMinutes = todayMinutes;
   let liveEarned = todayEarned;
 
-  if (session && job) {
-    const shift = await getShift(session.shiftId);
-    if (shift) {
-      const activeMinutes = calculateWorkedMinutesFromEvents(
-        shift.events,
-        shift.breakMinutes
-      );
-      const completedToday = todayShifts
-        .filter((s) => s.id !== shift.id)
-        .reduce((sum, s) => sum + s.workedMinutes, 0);
-      const completedEarned = todayShifts
-        .filter((s) => s.id !== shift.id)
-        .reduce((sum, s) => sum + s.earnedAmount, 0);
-      liveMinutes = completedToday + activeMinutes;
-      liveEarned =
-        completedEarned +
-        calculatePay(activeMinutes, job.payConfig, shift.date, shift.isOvertime);
+  if (session) {
+    const includeSession =
+      jobFilter === "all" || session.jobId === jobFilter;
+    if (includeSession) {
+      const shift = await getShift(session.shiftId);
+      if (shift) {
+        const jobs = await getJobs(userId);
+        const job = jobs.find((j) => j.id === shift.jobId);
+        if (job) {
+          const activeMinutes = calculateWorkedMinutesFromEvents(
+            shift.events,
+            shift.breakMinutes
+          );
+          const completedToday = todayShifts
+            .filter((s) => s.id !== shift.id)
+            .reduce((sum, s) => sum + s.workedMinutes, 0);
+          const completedEarned = todayShifts
+            .filter((s) => s.id !== shift.id)
+            .reduce((sum, s) => sum + s.earnedAmount, 0);
+          liveMinutes = completedToday + activeMinutes;
+          liveEarned =
+            completedEarned +
+            calculatePay(activeMinutes, job.payConfig, shift.date, shift.isOvertime);
+        }
+      }
     }
   }
 

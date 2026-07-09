@@ -15,7 +15,8 @@ import {
   initializeUserData,
   loadActiveSessionState,
 } from "@/lib/services/shift-service";
-import { useActiveSessionStore, useAppStore, getSelectedJob } from "@/stores/app-store";
+import type { CalendarJobFilterValue } from "@/components/calendar/calendar-job-filter";
+import { useActiveSessionStore, useAppStore } from "@/stores/app-store";
 
 export function useUserInit() {
   const { user } = useAuth();
@@ -110,15 +111,12 @@ export function useShiftsForDate(date: string, enabled = true) {
   });
 }
 
-export function useDashboardStats() {
+export function useDashboardStats(jobFilter: CalendarJobFilterValue = "all") {
   const { user } = useAuth();
-  const selectedJobId = useAppStore((s) => s.selectedJobId);
-  const { data: jobs } = useJobs();
-  const job = jobs ? getSelectedJob(jobs, selectedJobId) : null;
 
   return useQuery({
-    queryKey: ["dashboard", user?.uid, selectedJobId],
-    queryFn: () => getDashboardStats(user!.uid, job),
+    queryKey: ["dashboard", user?.uid, jobFilter],
+    queryFn: () => getDashboardStats(user!.uid, jobFilter),
     enabled: !!user,
     refetchInterval: 30000,
   });
